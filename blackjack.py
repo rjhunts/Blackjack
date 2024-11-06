@@ -8,9 +8,16 @@ def title():
     print("BLACKJACK!")
     print("Blackjack payout is 3:2\n")
 
+# function that draws a random card from the deck and then removes it
 def draw_card(deck):
     card = random.choice(deck)
     return card
+
+def dealers_hand():
+    pass
+
+def players_hand():
+    pass
 
 # function that generates the card deck
 def make_deck():
@@ -49,26 +56,9 @@ def main():
     title()
     money = db.get_money()
     print(f"Money: {money}")
-    bet_amount = int(input("Bet amount: "))
-    deck = make_deck()
-    show_card = draw_card(deck)
-    deck.pop(deck.index(show_card))
-    print(f"\nDEALER'S SHOW CARD:\n{show_card[1]} of {show_card[0]}")
-
-
-
-
-
-
-
-
-
-
-
-    '''for count, card in enumerate(deck):
-        print(card)
-        
-    print(f"There are {count+1} cards in the deck")'''
+    bet_amount = float(input("Bet amount: "))
+    amount_left = money - bet_amount
+    db.write_money(amount_left)
 
 # dunder method
 if __name__ == "__main__":
