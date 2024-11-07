@@ -64,32 +64,6 @@ def make_deck():
 def main():
     title()
     print_money()
-    dealers_hand = []
-    players_hand = []
-    deck = make_deck()
-    card = draw_card(deck)
-    deck.pop(deck.index(card))
-    dealers_hand = get_dealers_hand(card, dealers_hand)
-    print("\nDEALER'S SHOW CARD:")
-    print(f"{dealers_hand[0][1]} of {dealers_hand[0][0]}")
-    card = draw_card(deck)
-    deck.pop(deck.index(card))
-    players_hand = get_players_hand(card, players_hand)
-    card = draw_card(deck)
-    deck.pop(deck.index(card))
-    players_hand = get_players_hand(card, players_hand)
-    print("\nYOUR CARDS:")
-    print(f"{players_hand[0][1]} of {players_hand[0][0]}")
-    print(f"{players_hand[1][1]} of {players_hand[1][0]}")
-    choice = input("\nHit or stand? (hit/stand): ").lower()
-    if choice == "hit":
-        card = draw_card(deck)
-        deck.pop(deck.index(card))
-        players_hand = get_players_hand(card, players_hand)
-        print("\nYOUR CARDS:")
-        print(f"{players_hand[0][1]} of {players_hand[0][0]}")
-        print(f"{players_hand[1][1]} of {players_hand[1][0]}")
-        print(f"{players_hand[2][1]} of {players_hand[2][0]}\n")
 
 # dunder method
 if __name__ == "__main__":
