@@ -196,4 +196,3 @@ def main():
 # dunder method
 if __name__ == "__main__":
     main()
-6
