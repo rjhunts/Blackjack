@@ -1,198 +1,133 @@
-#!/usr/bin/env python3
-import csv
-import random
 import db
+import csv
+import sys
+import random
 
-# function that displays information to the user
+# prints out title and payout
 def title():
     print("BLACKJACK!")
     print("Blackjack payout is 3:2\n")
 
-# function that gets money from csv file
-def print_money():
-    money = db.get_money()
-    print(f"Money: {money}")
-    bet_amount = float(input("Bet amount: "))
-    amount_left = money - bet_amount
-    db.write_money(amount_left)
-    return bet_amount
+# retrieves the deck from deck.csv file
+def get_deck():
+    try:
+        with open("deck.csv") as file:
+            reader = csv.reader(file)
+            deck = [line for line in reader]
+            return deck
+        
+    except FileNotFoundError:
+        print("Could not find \"deck.csv\".")
+        print("Exiting program.")
+        sys.exit()
 
-# function that draws a random card from the deck and then removes it
-def draw_card(deck):
+# draws a random card from the deck
+def get_card(deck):
     card = random.choice(deck)
     deck.pop(deck.index(card))
     return card
 
-# function that gets the dealers hand
-def get_dealers_hand(deck, dealers_hand):
-    card = draw_card(deck)
-    dealers_hand.append(card)
-    return dealers_hand
+# prints the players / dealers cards
+def print_cards(hand):
+    for card in hand:
+        print(f"{card[1]} of {card[0]}")
 
-# function that gets the players hand
-def get_players_hand(deck, players_hand):
-    card = draw_card(deck)
-    players_hand.append(card)
-    return players_hand
+# retrieves the players money from money.txt
+def get_players_money():
+    money = db.get_money()
+    return money
 
-def check_win(player, hand):
-    if player == "player":
-        total = 0
-        for card in hand:
-            total += card[2]
-        
-        return total
-    
-    elif player == "dealer":
-        total = 0
-        for card in hand:
-            total += card[2]
+# gets the players bet amount
+def get_bet():
+    while True:
+        try:
+            if bet_amount := int(input("Bet amount: ")) >= 5:
+                return bet_amount
+            else:
+                print("Bet must be at least $5.\n")
 
-        return total
+        except ValueError:
+            print("Bet must be a natural number greater than or equal to $5\n")
 
-# function that generates the card deck
-def make_deck():
-    deck = []
-    for x in range(4):
-        if x == 0:
-            suit = "Spades"
-        if x == 1:
-            suit = "Clubs"
-        if x == 2:
-            suit = "Hearts"
-        if x == 3:
-            suit = "Diamonds"
-                                
-        for value in range(13):
-            if value == 0:
-                rank = "Ace"
-            elif value == 10:
-                rank = "Jack"
-                value = 9
-            elif value == 11:
-                rank = "Queen"
-                value = 9
-            elif value == 12:
-                rank = "King"
-                value = 9
-            else: rank = value+1
+# gets players choice for hit and stand
+def hit_or_stand(players_hand, dealers_hand, deck):
+    while True:
+        choice = input("\nHit or stand? (hit/stand): ").lower()
+        if choice == "hit":
+            players_hand.append(get_card(deck))
+            print("\nYOUR CARDS:")
+            print_cards(players_hand)
+            return True
+        elif choice == "stand":
+            while get_points(dealers_hand) < 17:
+                dealers_hand.append(get_card(deck))
+            print("\nDEALER'S CARDS:")
+            print_cards(dealers_hand)
+            return False
+        else:
+            print("Invalid choice, please try again.")
 
-            card = [suit, rank, value+1]
-            deck.append(card)
+# gets the player and dealers points
+def get_points(hand):
+    points = 0
+    for card in hand:
+        points += int(card[2])
+    return points
 
-    return deck
+# decides who the winner is
+def get_winner(players_hand, dealers_hand):
+    players_points = get_points(players_hand)
+    dealers_points = get_points(dealers_hand)
+    print(f"\nYOUR POINTS:    {players_points}")
+    print(f"DEALERS POINTS: {dealers_points}")
+    if players_points > dealers_points and players_points <= 21 or players_points <= 21 and dealers_points > 21:
+        print("\nYou win!")
+    elif players_points < dealers_points and dealers_points <= 21 or dealers_points <= 21 and players_points > 21:
+        print("\nSorry. You lose.")
+    else:
+        print("\nIt's a tie.")
+
+# checks for blackjack
+def check_for_blackjack(players_hand, dealers_hand):
+    players_points = get_points(players_hand)
+    dealers_points = get_points(dealers_hand)
+    if players_points == 21 and players_points != dealers_points:
+        print("\nBlackjack!")
+        print("You win!")
+        sys.exit()
+    elif dealers_hand == 21 and dealers_points != players_points:
+        print("\nDealers Blackjack")
+        print("Sorry. You lose.")
+        sys.exit()
+    elif players_points == 21 and dealers_points == 21:
+        print("\nDouble Blackjack")
+        sys.exit()
+    else: 
+        return
 
 # main function
 def main():
+    money = get_players_money()
     title()
-    bet_amount = print_money()
-    money = db.get_money()
-
+    print(f"Money: {money}")
+    deck = get_deck()
+    bet = get_bet()
     dealers_hand = []
     players_hand = []
-
-    deck = make_deck()
-
-    dealers_hand = get_dealers_hand(deck, dealers_hand)
+    dealers_hand.append(get_card(deck))
+    players_hand.append(get_card(deck))
+    dealers_hand.append(get_card(deck))
+    players_hand.append(get_card(deck))
     print("\nDEALER'S SHOW CARD:")
-    for card in dealers_hand:
-        print(f"{card[1]} of {card[0]}")
+    print(f"{dealers_hand[0][1]} of {dealers_hand[1][0]}")
+    print("\nYOUR CARDS")
+    print_cards(players_hand)
+    check_for_blackjack(players_hand, dealers_hand)
+    value = True
+    while value:
+        value = hit_or_stand(players_hand, dealers_hand, deck)
+    winner = get_winner(players_hand, dealers_hand)
 
-    players_hand = get_players_hand(deck, players_hand)
-    players_hand = get_players_hand(deck, players_hand)
-
-    print("\nYOUR CARDS:")
-    for card in players_hand:
-        print(f"{card[1]} of {card[0]}")
-    
-    check_win("player", players_hand)
-
-    while True:
-        choice = input("\nHit or stand? (hit/stand): ").lower()
-        total = 0
-        if choice == "hit":
-            players_hand = get_players_hand(deck, players_hand)
-            print("\nYOUR CARDS:")
-            for card in players_hand:
-                print(f"{card[1]} of {card[0]}")
-                total += card[2]
-
-            if total >= 21:
-                while check_win("dealer", dealers_hand) < 17:
-                    dealers_hand = get_dealers_hand(deck, dealers_hand)
-                
-                players_total = 0
-                for card in players_hand:
-                    players_total += card[2]
-
-                print("\nDEALER'S CARDS:")
-                dealers_total = 0
-                for card in dealers_hand:
-                    print(f"{card[1]} of {card[0]}")
-                    dealers_total += card[2]
-
-                print(f"\nYOUR POINTS:   {players_total}")
-                print(f"DEALER'S POINTS: {dealers_total}")
-
-                if 21 >= players_total > dealers_total or players_total <= 21 and dealers_total > 21:
-                    print("\nCongratulations. You win!")
-                    money = (money + bet_amount) * 1.5
-                    print(f"Money: {money}")
-                    db.write_money(money)
-                    break
-            
-                elif players_total < dealers_total < 21 or players_total > 21 and dealers_total > 21 or players_total > 21 and dealers_total <= 21:
-                    print("\nSorry. You lose.")
-                    money = db.get_money()
-                    print(f"Money: {money}")
-                    break
-
-                elif players_total == dealers_total:
-                    print("\nIt's a tie!")
-                    money = money + bet_amount
-                    print(f"Money: {money}")
-                    db.write_money(money)
-                    break
-                break
-
-        if choice == "stand":
-            while check_win("dealer", dealers_hand) < 17:
-                dealers_hand = get_dealers_hand(deck, dealers_hand)
-                
-            players_total = 0
-            for card in players_hand:
-                players_total += card[2]
-
-            print("\nDEALER'S CARDS:")
-            dealers_total = 0
-            for card in dealers_hand:
-                print(f"{card[1]} of {card[0]}")
-                dealers_total += card[2]
-
-            print(f"\nYOUR POINTS:   {players_total}")
-            print(f"DEALER'S POINTS: {dealers_total}")
-
-            if 21 >= players_total > dealers_total or players_total <= 21 and dealers_total > 21:
-                print("\nCongratulations. You win!")
-                money = (money + bet_amount) * 1.5
-                print(f"Money: {money}")
-                db.write_money(money)
-                break
-            
-            elif players_total < dealers_total < 21 or players_total > 21 and dealers_total > 21 or players_total > 21 and dealers_total <= 21:
-                print("\nSorry. You lose.")
-                money = db.get_money()
-                print(f"Money: {money}")
-                break
-            
-            elif players_total == dealers_total:
-                print("\nIt's a tie!")
-                money = money + bet_amount
-                print(f"Money: {money}")
-                db.write_money(money)
-                break
-            break
-        
 # dunder method
 if __name__ == "__main__":
     main()
