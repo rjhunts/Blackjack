@@ -1,3 +1,5 @@
+#! /usr/bin/env python3
+
 import db
 import csv
 import sys
@@ -22,16 +24,16 @@ def get_deck():
         sys.exit()
 
 # draws a random card from the deck
-def get_card(deck, choose):
+def get_card(deck, hand, choose):
     card = random.choice(deck)
     deck.pop(deck.index(card))
     if choose and card[2] == "11":
-        card = check_ace(card, deck)
+        card = check_ace(card, hand)
 
     return card
 
 # checks if the player draws an ace
-def check_ace(card, deck):
+def check_ace(card, hand):
     print(f"You drew an {card[1]} of {card[0]}")
     while True:
         choice = input("Choose card value (1 or 11): ")
@@ -39,10 +41,9 @@ def check_ace(card, deck):
             card[2] = choice
             break
 
-    if get_points(deck) > 21:
+    if get_points(hand) + 11 > 21:
         card[2] = "1"
 
-    print(card)
     return card
 
 # prints the players / dealers cards
@@ -50,35 +51,68 @@ def print_cards(hand):
     for card in hand:
         print(f"{card[1]} of {card[0]}")
 
-# gets the players bet amount
-def get_bet():
+# validates the players money and retrives the bet amount
+def get_bet(money):
+    if money < 5:
+        while True:
+            choice = input("Would you like to purchase more chips? (y/n): ")
+            if choice == "y":
+                while True:
+                    try:
+                        money = int(input("Enter chip amount: "))
+                        if money < 5 or money > 1000:
+                            money = 0
+                            print("Invalid chip amount\n")
+                        else:
+                            break
+
+                    except ValueError:
+                        print("Invalid chip amount, please try again.\n")
+
+                break
+                    
+
+            elif choice == "n":
+                print("\nCome back soon!")
+                print("Bye!")
+                sys.exit()
+                break
+
+            else:
+                print("Invalid input, please try again.")
+
+
     while True:
         try:
-            bet_amount = int(input("Bet amount: "))
-            if bet_amount >= 5:
+            bet_amount = float(input("Bet amount: $"))
+            if bet_amount >= 5 and bet_amount <= 1000 and bet_amount <= money:
                 return bet_amount
             else:
-                print("Bet must be at least $5.\n")
+                print("Invalid bet amount, please try again.")
 
         except ValueError:
-            print("Bet must be a natural number greater than or equal to $5\n")
+            print("Bet must be any number greater than or equal to $5\n")
 
 # gets players choice for hit and stand
 def hit_or_stand(players_hand, dealers_hand, deck):
-    
-    if get_points(players_hand) > 21:
+
+    if get_points(players_hand) >= 21:
+        while get_points(dealers_hand) < 17:
+            dealers_hand.append(get_card(deck, dealers_hand, False))
+        print("\nDEALER'S CARDS:")
+        print_cards(dealers_hand)
         return False
     
     while True:
         choice = input("\nHit or stand? (hit/stand): ").lower()
         if choice == "hit":
-            players_hand.append(get_card(deck, True))
+            players_hand.append(get_card(deck, players_hand, True))
             print("\nYOUR CARDS:")
             print_cards(players_hand)
             return True
         elif choice == "stand":
             while get_points(dealers_hand) < 17:
-                dealers_hand.append(get_card(deck, False))
+                dealers_hand.append(get_card(deck, dealers_hand, False))
             print("\nDEALER'S CARDS:")
             print_cards(dealers_hand)
             return False
@@ -93,22 +127,25 @@ def get_points(hand):
     return points
 
 # decides who the winner is
-def get_winner(players_hand, dealers_hand, money, bet):
+def get_winner(players_hand, dealers_hand, money, bet, blackjack):
     players_points = get_points(players_hand)
     dealers_points = get_points(dealers_hand)
     print(f"\nYOUR POINTS:    {players_points}")
     print(f"DEALERS POINTS: {dealers_points}")
-
-    if players_points > dealers_points and players_points <= 21 or players_points <= 21 and dealers_points > 21:
+    if blackjack:
         print("\nYou win!")
-        print(f"Money: {money + bet}")
-        db.write_money(money + bet)
+        print(f"Money: {round(money + (bet * 1.5), 2)}")
+        db.write_money(round(money + (bet * 1.5), 2))
+    elif players_points > dealers_points and players_points <= 21 or players_points <= 21 and dealers_points > 21:
+        print("\nYou win!")
+        print(f"Money: {round(money + bet, 2)}")
+        db.write_money(round(money + bet, 2))
     elif players_points < dealers_points and dealers_points <= 21 or players_points > 21:
         print("\nSorry. You lose.")
-        print(f"Money: {money - bet}")
-        db.write_money(money - bet)
+        print(f"Money: {round(money - bet, 2)}")
+        db.write_money(round(money - bet, 2))
     else:
-        print("\nIt's a tie.")
+        print("\nPush.")
 
 # checks for blackjack
 def check_for_blackjack(players_hand, dealers_hand):
@@ -116,17 +153,9 @@ def check_for_blackjack(players_hand, dealers_hand):
     dealers_points = get_points(dealers_hand)
     if players_points == 21 and players_points != dealers_points:
         print("\nBlackjack!")
-        print("You win!")
-        sys.exit()
-    elif dealers_hand == 21 and dealers_points != players_points:
-        print("\nDealers Blackjack")
-        print("Sorry. You lose.")
-        sys.exit()
-    elif players_points == 21 and dealers_points == 21:
-        print("\nDouble Blackjack")
-        sys.exit()
-    else: 
-        return
+        return True
+    else:
+        return False
 
 # main function
 def main():
@@ -135,22 +164,23 @@ def main():
         title()
         print(f"Money: {money}")
         deck = get_deck()
-        bet = get_bet()
+        bet = get_bet(money)
+        db.write_money(money - bet)
         dealers_hand = []
         players_hand = []
-        dealers_hand.append(get_card(deck, False))
-        players_hand.append(get_card(deck, True))
-        dealers_hand.append(get_card(deck, False))
-        players_hand.append(get_card(deck, True))
+        players_hand.append(get_card(deck, players_hand, True))
+        dealers_hand.append(get_card(deck, dealers_hand, False))
+        players_hand.append(get_card(deck, players_hand, True))
+        dealers_hand.append(get_card(deck, dealers_hand, False))
         print("\nDEALER'S SHOW CARD:")
         print(f"{dealers_hand[0][1]} of {dealers_hand[1][0]}")
         print("\nYOUR CARDS")
         print_cards(players_hand)
-        check_for_blackjack(players_hand, dealers_hand)
+        blackjack = check_for_blackjack(players_hand, dealers_hand)
         value = True
         while value:
             value = hit_or_stand(players_hand, dealers_hand, deck)
-        winner = get_winner(players_hand, dealers_hand, money, bet)
+        get_winner(players_hand, dealers_hand, money, bet, blackjack)
         choice = input("\nPlay again? (y/n): ").lower()
         if choice == "n":
             print("\nCome back soon!")
