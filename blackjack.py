@@ -132,8 +132,8 @@ def get_winner(players_hand, dealers_hand, money, bet, blackjack):
     print(f"\nYOUR POINTS:    {players_points}")
     print(f"DEALERS POINTS: {dealers_points}")
     if blackjack:
-        print("\nBlackjack!")
-        print("You win!")
+        print("\nBLACKJACK!")
+        print("\nYou win!")
         print(f"Money: ${round(money + (bet * 1.5), 2)}")
         db.write_money(round(money + (bet * 1.5), 2))
     elif players_points > dealers_points and players_points <= 21 or players_points <= 21 and dealers_points > 21:
@@ -145,7 +145,7 @@ def get_winner(players_hand, dealers_hand, money, bet, blackjack):
         print(f"Money: ${round(money - bet, 2)}")
         db.write_money(round(money - bet, 2))
     else:
-        print("\nPush.")
+        print("\nIt's a draw.")
         print(f"Money: ${round(money, 2)}")
         db.write_money(round(money, 2))
 
@@ -189,6 +189,8 @@ def main():
             print("\nCome back soon!")
             print("Bye!")
             break
+        else:
+            print()
                       
 # dunder method
 if __name__ == "__main__":
