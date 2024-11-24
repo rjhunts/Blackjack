@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-
 import db
 import csv
 import sys
@@ -40,9 +39,14 @@ def check_ace(card, hand):
         if choice == "1" or choice == "11":
             card[2] = choice
             break
-
+    
+    # automatically chooses 1 if choosing 11 makes the player go over 21
     if get_points(hand) + 11 > 21:
         card[2] = "1"
+
+    # automatically chooses 11 if choosing 11 results in 21 points for the player
+    elif get_points(hand) + 11 == 21:
+        card[2] = "11"
 
     return card
 
@@ -61,7 +65,7 @@ def buy_chips(money):
                     while True:
                         new_money = int(input("Enter chip amount: "))
                         if new_money < 5 or new_money > 1000:
-                            print("Invalid chip amount\n")
+                            print("Chip amount must be at least 5 and no greater than 1000\n")
                         else:
                             db.write_money(new_money)
                             print(f"\nMoney: ${new_money}")
@@ -160,9 +164,9 @@ def check_for_blackjack(players_hand, dealers_hand):
 
 # main function
 def main():
+    title()
     while True:
         money = db.get_money()
-        title()
         print(f"Money: ${money}")
         if money < 5:
             money = buy_chips(money)
@@ -184,14 +188,18 @@ def main():
         while value:
             value = hit_or_stand(players_hand, dealers_hand, deck)
         get_winner(players_hand, dealers_hand, money, bet, blackjack)
-        choice = input("\nPlay again? (y/n): ").lower()
-        if choice == "n":
-            print("\nCome back soon!")
-            print("Bye!")
-            break
-        else:
-            print()
-                      
+        while True:
+            choice = input("\nPlay again? (y/n): ").lower()
+            if choice == "n":
+                print("\nCome back soon!")
+                print("Bye!")
+                sys.exit()
+            elif choice == "y":
+                print()
+                break
+            else:
+                print("Invalid input, please try again.")
+                
 # dunder method
 if __name__ == "__main__":
     main()
