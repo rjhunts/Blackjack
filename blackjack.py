@@ -9,7 +9,8 @@ def title():
     print("BLACKJACK!")
     print("Blackjack payout is 3:2\n")
 
-# retrieves the deck from deck.csv file
+# I was going to use a csv file to make the deck of cards but after reading the instructions before submitting I noticed you specifically wanted it as a 2D list
+'''# retrieves the deck from deck.csv file
 def get_deck():
     try:
         with open("deck.csv") as file:
@@ -20,13 +21,45 @@ def get_deck():
     except FileNotFoundError:
         print("Could not find \"deck.csv\".")
         print("Exiting program.")
-        sys.exit()
+        sys.exit()'''
+
+# generates the deck of cards using a 2D list
+def get_deck():
+    deck = []
+    for x in range(4):
+        if x == 0:
+            suit = "Spades"
+        if x == 1:
+            suit = "Clubs"
+        if x == 2:
+            suit = "Hearts"
+        if x == 3:
+            suit = "Diamonds"
+                                
+        for value in range(13):
+            if value == 0:
+                rank = "Ace"
+                value = 10
+            elif value == 10:
+                rank = "Jack"
+                value = 9
+            elif value == 11:
+                rank = "Queen"
+                value = 9
+            elif value == 12:
+                rank = "King"
+                value = 9
+            else: 
+                rank = value+1
+            card = [suit, rank, value+1]
+            deck.append(card)
+    return deck
 
 # draws a random card from the deck
 def get_card(deck, hand, choose):
     card = random.choice(deck)
     deck.pop(deck.index(card))
-    if choose and card[2] == "11":
+    if choose and card[2] == 11:
         card = check_ace(card, hand)
 
     return card
@@ -37,18 +70,18 @@ def check_ace(card, hand):
     while True:
         choice = input("Choose card value (1 or 11): ")
         if choice == "1" or choice == "11":
-            card[2] = choice
+            card[2] = int(choice)
             break
         else:
             print("Invalid input, please try again.\n")
     
     # automatically chooses 1 if choosing 11 makes the player go over 21
     if get_points(hand) + 11 > 21:
-        card[2] = "1"
+        card[2] = 1
 
     # automatically chooses 11 if choosing 11 results in 21 points for the player
     elif get_points(hand) + 11 == 21:
-        card[2] = "11"
+        card[2] = 11
 
     return card
 
