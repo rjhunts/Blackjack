@@ -125,7 +125,7 @@ def get_bet(money):
             if bet_amount >= 5 and bet_amount <= 1000 and bet_amount <= money:
                 return bet_amount
             else:
-                print("Invalid bet amount, please try again.")
+                print("Invalid bet amount, please try again.\n")
 
         except ValueError:
             print("Bet must be any number greater than or equal to $5\n")
