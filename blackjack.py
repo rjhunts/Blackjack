@@ -133,7 +133,7 @@ def get_winner(players_hand, dealers_hand, money, bet, blackjack):
     players_points = get_points(players_hand)
     dealers_points = get_points(dealers_hand)
     print(f"\nYOUR POINTS:    {players_points}")
-    print(f"DEALERS POINTS: {dealers_points}")
+    print(f"DEALER'S POINTS: {dealers_points}")
     if blackjack:
         print("\nBLACKJACK!")
         print("\nYou win!")
