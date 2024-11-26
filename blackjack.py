@@ -39,6 +39,8 @@ def check_ace(card, hand):
         if choice == "1" or choice == "11":
             card[2] = choice
             break
+        else:
+            print("Invalid input, please try again.\n")
     
     # automatically chooses 1 if choosing 11 makes the player go over 21
     if get_points(hand) + 11 > 21:
