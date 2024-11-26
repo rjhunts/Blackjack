@@ -171,6 +171,7 @@ def main():
         if money < 5:
             money = buy_chips(money)
         deck = get_deck()
+        random.shuffle(deck)
         bet = get_bet(money)
         db.write_money(money - bet)
         dealers_hand = []
