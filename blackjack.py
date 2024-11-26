@@ -62,14 +62,13 @@ def buy_chips(money):
         if choice == "y":
             while True:
                 try:
-                    while True:
-                        new_money = int(input("Enter chip amount: "))
-                        if new_money < 5 or new_money > 1000:
-                            print("Chip amount must be at least 5 and no greater than 1000\n")
-                        else:
-                            db.write_money(new_money)
-                            print(f"\nMoney: ${new_money}")
-                            return new_money
+                    new_money = int(input("Enter chip amount: "))
+                    if new_money < 5 or new_money > 1000:
+                        print("Chip amount must be at least 5 and no greater than 1000\n")
+                    else:
+                        db.write_money(new_money)
+                        print(f"\nMoney: ${new_money}")
+                        return new_money
 
                 except ValueError:
                     print("Invalid chip amount, please try again.\n")
